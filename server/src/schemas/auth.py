@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
@@ -7,6 +9,12 @@ class LoginData(BaseModel):
 
 
 class SignUpData(BaseModel):
-    name: str
+    first_name: str
+    last_name: str
     email: str
     password: str
+
+class SignUpResponse(BaseModel):
+    id: UUID
+    access_token: str
+    refresh_token: str
