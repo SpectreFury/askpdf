@@ -15,12 +15,6 @@ const NavBar = () => {
           <Link href="/login" className="text-sm font-medium">
             Sign in
           </Link>
-          <Link
-            href="/signup"
-            className="text-sm bg-primary text-card p-2 rounded"
-          >
-            Start Free Trial
-          </Link>
         </div>
       </nav>
     </div>
