@@ -1,13 +1,11 @@
 from fastapi import FastAPI
+from .routers import auth
 
 app = FastAPI()
 
-@app.get("/")
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+
+
+@app.get("/health")
 async def root():
-    return {"message": "Hello"}
-
-@app.get("/{id}")
-async def get_id(id: str):
-    return {"id": id}
-
-
+    return {"message": "The API is active"}
