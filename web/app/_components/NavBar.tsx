@@ -17,7 +17,7 @@ const NavBar = () => {
           </Link>
           <Link
             href="/signup"
-            className="text-sm bg-primary text-card primary p-2 rounded"
+            className="text-sm bg-primary text-card p-2 rounded"
           >
             Start Free Trial
           </Link>
