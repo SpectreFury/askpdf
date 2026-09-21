@@ -25,3 +25,11 @@ class IncorrectPasswordException(AppExceptions):
 class NoBearerTokenException(AppExceptions):
     def __init__(self, message: str = "Token is required for making this request"):
         super().__init__(message=message, status_code=401)
+
+class InvalidBearerTokenException(AppExceptions):
+    def __init__(self, message: str = "Your token is malformed"):
+        super().__init__(message=message, status_code=401)
+
+class ExpiredTokenException(AppExceptions):
+    def __init__(self, message: str = "Your token is expired"):
+        super().__init__(message=message, status_code=401)

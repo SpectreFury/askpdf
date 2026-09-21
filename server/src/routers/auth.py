@@ -1,12 +1,11 @@
 import os
 from fastapi import APIRouter, Depends, Response, status, Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.auth_models import User
-from src.exceptions import NoBearerTokenException
+from src.dependencies.security import get_current_user
 from src.schemas.api import APIResponse
-from src.utils.jwt import decode_jwt, encode_jwt
+from src.utils.jwt import encode_jwt
 from ..services.auth_service import AuthService
 
 from src.db.db import get_async_session
@@ -18,7 +17,6 @@ from ..schemas.auth import (
     UserResponse,
 )
 
-security = HTTPBearer()
 secure = os.getenv("ENV") == "production"
 
 router = APIRouter()
@@ -27,14 +25,11 @@ router = APIRouter()
 @router.get(
     "/me", response_model=APIResponse[UserResponse], status_code=status.HTTP_200_OK
 )
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+async def get_user_me(
+    user_id: str = Depends(get_current_user),
     session: AsyncSession = Depends(get_async_session),
 ):
-    token = credentials.credentials
-    data = decode_jwt(token)
-
-    user = await session.get_one(User, data["sub"])
+    user = await session.get_one(User, user_id)
 
     return APIResponse(success=True, data=user, error=None)
 
