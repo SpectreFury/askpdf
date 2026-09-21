@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,15 +10,14 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  FieldLabel,
-  Field,
-  FieldError,
-} from "@/components/ui/field";
+import { FieldLabel, Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "@tanstack/react-form-nextjs";
 import Link from "next/link";
 import * as z from "zod";
+import { urls } from "@/utils/env";
+import { APIResponse } from "@/types/api";
+import { Loader2 } from "lucide-react";
 
 const signInSchema = z.object({
   email: z.email(),
@@ -27,6 +28,8 @@ const signInSchema = z.object({
 });
 
 const SignInCard = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   const form = useForm({
     defaultValues: {
       email: "",
@@ -34,7 +37,31 @@ const SignInCard = () => {
     },
 
     onSubmit: async ({ value }) => {
-      console.log("Value: ", value);
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(urls.LOGIN_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: value.email,
+            password: value.password,
+          }),
+        });
+
+        const result = (await response.json()) as APIResponse;
+
+        if (!result.success) throw new Error(result.error);
+
+        localStorage.setItem("access_token", result.data.access_token);
+
+        router.replace("/home");
+      } catch (error) {
+      } finally {
+        setIsLoading(false);
+      }
     },
 
     validators: {
@@ -123,7 +150,11 @@ const SignInCard = () => {
             />
 
             <Button type="submit" className="mt-2 py-5 self-stretch">
-              Sign in to AskPDF
+              {isLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Sign in to AskPDF"
+              )}
             </Button>
 
             <div className="mt-4">
