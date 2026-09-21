@@ -2,6 +2,11 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+class UserResponse(BaseModel):
+    id: UUID
+    email: str
+    first_name: str
+    last_name: str
 
 class LoginData(BaseModel):
     email: str
@@ -10,6 +15,9 @@ class LoginData(BaseModel):
 class LoginResponse(BaseModel):
     id: UUID
     access_token: str
+    first_name: str
+    last_name: str
+
 
 class SignUpData(BaseModel):
     first_name: str

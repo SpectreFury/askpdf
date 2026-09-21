@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +17,7 @@ import Link from "next/link";
 import * as z from "zod";
 import { urls } from "@/utils/env";
 import { APIResponse } from "@/types/api";
+import { useRouter } from "next/navigation";
 
 const signInSchema = z.object({
   firstName: z.string(),
@@ -27,6 +30,9 @@ const signInSchema = z.object({
 });
 
 const SignUpCard = () => {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm({
     defaultValues: {
       firstName: "",
@@ -36,6 +42,8 @@ const SignUpCard = () => {
     },
 
     onSubmit: async ({ value }) => {
+      setIsLoading(true);
+
       try {
         const response = await fetch(urls.SIGNUP_URL, {
           method: "POST",
@@ -53,9 +61,13 @@ const SignUpCard = () => {
 
         if (!result.success) throw new Error(`${result.error}`);
 
-        console.log("Result: ", result);
+        localStorage.setItem("access_token", result.data.access_token);
+
+        router.replace("/home");
       } catch (error) {
         console.error("Sign up error: ", error);
+      } finally {
+        setIsLoading(false);
       }
     },
 
@@ -202,7 +214,11 @@ const SignUpCard = () => {
             />
 
             <Button type="submit" className="mt-2 py-5 self-stretch">
-              Create Research Account
+              {isLoading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                "Create Research Account"
+              )}
             </Button>
             <div className="mt-4">
               Already registered?{" "}

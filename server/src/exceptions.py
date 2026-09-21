@@ -21,3 +21,7 @@ class EmailOrPasswordMissingException(AppExceptions):
 class IncorrectPasswordException(AppExceptions):
     def __init__(self, message: str = "Your credentials are incorrect, try again."):
         super().__init__(message=message, status_code=400)
+
+class NoBearerTokenException(AppExceptions):
+    def __init__(self, message: str = "Token is required for making this request"):
+        super().__init__(message=message, status_code=401)

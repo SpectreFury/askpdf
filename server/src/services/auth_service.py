@@ -55,11 +55,11 @@ class AuthService:
         )
 
         return SignUpResponse(
-                id=new_item.id,
-                access_token=access_token,
-                first_name = new_item.first_name,
-                last_name = new_item.last_name
-                )
+            id=new_item.id,
+            access_token=access_token,
+            first_name=new_item.first_name,
+            last_name=new_item.last_name,
+        )
 
     async def login_user(self, login_data: LoginData) -> LoginResponse:
         email = login_data.email.lower().strip()
@@ -88,4 +88,9 @@ class AuthService:
             str(existing_user.id), existing_user.first_name, existing_user.last_name
         )
 
-        return LoginResponse(id=existing_user.id, access_token=access_token)
+        return LoginResponse(
+            id=existing_user.id,
+            access_token=access_token,
+            first_name=existing_user.first_name,
+            last_name=existing_user.last_name,
+        )

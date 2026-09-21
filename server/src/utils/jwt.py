@@ -21,3 +21,9 @@ def encode_jwt(sub: str, first_name: str, last_name: str, is_refresh: bool = Fal
     token = jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
 
     return token
+
+
+def decode_jwt(token: str):
+    decoded = jwt.decode(token, JWT_SECRET, algorithms=ALGORITHM)
+
+    return decoded
