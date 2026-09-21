@@ -8,16 +8,13 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  FieldGroup,
-  FieldLabel,
-  Field,
-  FieldError,
-} from "@/components/ui/field";
+import { FieldLabel, Field, FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useForm } from "@tanstack/react-form-nextjs";
 import Link from "next/link";
 import * as z from "zod";
+import { urls } from "@/utils/env";
+import { APIResponse } from "@/types/api";
 
 const signInSchema = z.object({
   firstName: z.string(),
@@ -37,8 +34,29 @@ const SignUpCard = () => {
       email: "",
       password: "",
     },
+
     onSubmit: async ({ value }) => {
-      console.log("Value: ", value);
+      try {
+        const response = await fetch(urls.SIGNUP_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            first_name: value.firstName,
+            last_name: value.lastName,
+            email: value.email,
+            password: value.password,
+          }),
+        });
+        const result = (await response.json()) as APIResponse;
+
+        if (!result.success) throw new Error(`${result.error}`);
+
+        console.log("Result: ", result);
+      } catch (error) {
+        console.error("Sign up error: ", error);
+      }
     },
 
     validators: {
@@ -187,7 +205,7 @@ const SignUpCard = () => {
               Create Research Account
             </Button>
             <div className="mt-4">
-              Already registered?
+              Already registered?{" "}
               <Link href="/login" className="text-primary">
                 Sign in here
               </Link>

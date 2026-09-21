@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.schemas.api import APIResponse
+from src.utils.jwt import encode_jwt
 from ..services.auth_service import AuthService
 
 from src.db.db import get_async_session
@@ -28,9 +29,16 @@ async def login(
     status_code=status.HTTP_201_CREATED,
 )
 async def signup(
-    signup_data: SignUpData, session: AsyncSession = Depends(get_async_session)
+    response: Response,
+    signup_data: SignUpData,
+    session: AsyncSession = Depends(get_async_session),
 ):
     service = AuthService(session)
 
     data = await service.register_user(signup_data)
+
+    refresh_token = encode_jwt(str(data.id), data.first_name, data.last_name, True)
+
+    # Add httmonly, secure and samesite = lax
+    response.set_cookie(key="refresh_token", value=refresh_token)
     return APIResponse(success=True, data=data, error=None)

@@ -48,15 +48,18 @@ class AuthService:
         await self.session.commit()
         await self.session.refresh(new_item)
 
-        # Create an access and refresh token
+        # Create an access token
 
         access_token = encode_jwt(
             str(new_item.id), new_item.first_name, new_item.last_name
         )
 
         return SignUpResponse(
-            id=new_item.id, access_token=access_token, refresh_token=""
-        )
+                id=new_item.id,
+                access_token=access_token,
+                first_name = new_item.first_name,
+                last_name = new_item.last_name
+                )
 
     async def login_user(self, login_data: LoginData) -> LoginResponse:
         email = login_data.email.lower().strip()
@@ -85,6 +88,4 @@ class AuthService:
             str(existing_user.id), existing_user.first_name, existing_user.last_name
         )
 
-        return LoginResponse(
-            id=existing_user.id, access_token=access_token, refresh_token=""
-        )
+        return LoginResponse(id=existing_user.id, access_token=access_token)

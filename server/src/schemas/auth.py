@@ -10,7 +10,6 @@ class LoginData(BaseModel):
 class LoginResponse(BaseModel):
     id: UUID
     access_token: str
-    refresh_token: str
 
 class SignUpData(BaseModel):
     first_name: str
@@ -22,4 +21,5 @@ class SignUpData(BaseModel):
 class SignUpResponse(BaseModel):
     id: UUID
     access_token: str
-    refresh_token: str
+    first_name: str
+    last_name: str
