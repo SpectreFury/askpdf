@@ -3,4 +3,8 @@
 - [x] Integrate routing with login and signup
 - [x] Access token handling 
 - [x] Refresh token handling (check if it's reaching frontend)
-- [] Renew route
+- [x] Renew route
+
+TODO
+
+UI
