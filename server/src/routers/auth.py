@@ -13,6 +13,7 @@ from src.db.db import get_async_session
 from ..schemas.auth import (
     LoginData,
     LoginResponse,
+    RefreshResponse,
     SignUpData,
     SignUpResponse,
     UserResponse,
@@ -35,9 +36,23 @@ async def get_user_me(
     return APIResponse(success=True, data=user, error=None)
 
 
-@router.post("/refresh")
-async def refresh_token(refresh_token=Depends(get_user_from_refresh_token)):
-    return {"refresh_token": refresh_token}
+@router.post(
+    "/refresh",
+    response_model=APIResponse[RefreshResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def refresh_token(
+    payload=Depends(get_user_from_refresh_token),
+    session: AsyncSession = Depends(get_async_session),
+):
+    user_id: str = payload["sub"]
+    user = await session.get_one(User, user_id)
+
+    access_token = encode_jwt(str(user.id), user.first_name, user.last_name, False)
+
+    data = RefreshResponse(access_token=access_token)
+
+    return APIResponse(success=True, data=data, error=None)
 
 
 @router.post(

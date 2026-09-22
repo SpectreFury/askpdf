@@ -8,15 +8,20 @@ from src.exceptions import (
     ExpiredTokenException,
     InvalidBearerTokenException,
     NoBearerTokenException,
+    NoRefreshTokenException,
 )
 from src.utils.jwt import decode_jwt
 
 security = HTTPBearer()
 
-def get_user_from_refresh_token(refresh_token: Annotated[str | None, Cookie()] = None):
-    print("Refresh_token: ", refresh_token)
 
-    return refresh_token
+def get_user_from_refresh_token(refresh_token: Annotated[str | None, Cookie()] = None):
+    if not refresh_token:
+        raise NoRefreshTokenException()
+
+    payload = decode_jwt(refresh_token)
+
+    return payload
 
 def get_current_user(credential: HTTPAuthorizationCredentials = Depends(security)):
     token = credential.credentials
