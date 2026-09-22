@@ -64,7 +64,7 @@ const SignUpCard = () => {
 
         localStorage.setItem("access_token", result.data.access_token);
 
-        router.replace("/home");
+        router.replace("/workspace");
       } catch (error) {
         console.error("Sign up error: ", error);
       } finally {

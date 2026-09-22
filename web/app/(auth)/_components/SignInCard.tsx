@@ -58,7 +58,7 @@ const SignInCard = () => {
 
         localStorage.setItem("access_token", result.data.access_token);
 
-        router.replace("/home");
+        router.replace("/workspace");
       } catch (error) {
       } finally {
         setIsLoading(false);
