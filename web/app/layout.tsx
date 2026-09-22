@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Spectral } from "next/font/google";
 import "./globals.css";
+import TanstackProvider from "@/components/providers/tanstack-provider";
 
 const interSans = Inter({
   variable: "--font-inter",
@@ -25,7 +26,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${interSans.variable} ${spectralSans.variable} h-full antialiased`}
     >
+    <TanstackProvider>
       <body className="min-h-full flex flex-col">{children}</body>
+    </TanstackProvider>
     </html>
   );
 }
