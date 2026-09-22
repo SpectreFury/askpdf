@@ -1,9 +1,10 @@
 import os
+from typing import Annotated
 from fastapi import APIRouter, Depends, Response, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.models.auth_models import User
-from src.dependencies.security import get_current_user
+from src.dependencies.security import get_current_user, get_user_from_refresh_token
 from src.schemas.api import APIResponse
 from src.utils.jwt import encode_jwt
 from ..services.auth_service import AuthService
@@ -34,6 +35,11 @@ async def get_user_me(
     return APIResponse(success=True, data=user, error=None)
 
 
+@router.post("/refresh")
+async def refresh_token(refresh_token=Depends(get_user_from_refresh_token)):
+    return {"refresh_token": refresh_token}
+
+
 @router.post(
     "/login", response_model=APIResponse[LoginResponse], status_code=status.HTTP_200_OK
 )
@@ -48,7 +54,14 @@ async def login(
 
     refresh_token = encode_jwt(str(data.id), data.first_name, data.last_name, True)
 
-    response.set_cookie("refresh_token", refresh_token)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=secure,  # True for prod
+        samesite="lax",
+    )
+
     return APIResponse(success=True, data=data, error="")
 
 

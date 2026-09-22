@@ -1,5 +1,6 @@
 from typing import Annotated
-from fastapi import Depends, FastAPI, HTTPException, status
+
+from fastapi import Depends, Cookie
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
 
@@ -11,6 +12,11 @@ from src.exceptions import (
 from src.utils.jwt import decode_jwt
 
 security = HTTPBearer()
+
+def get_user_from_refresh_token(refresh_token: Annotated[str | None, Cookie()] = None):
+    print("Refresh_token: ", refresh_token)
+
+    return refresh_token
 
 def get_current_user(credential: HTTPAuthorizationCredentials = Depends(security)):
     token = credential.credentials

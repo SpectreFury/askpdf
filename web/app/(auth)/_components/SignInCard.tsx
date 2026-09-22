@@ -42,6 +42,7 @@ const SignInCard = () => {
       try {
         const response = await fetch(urls.LOGIN_URL, {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
