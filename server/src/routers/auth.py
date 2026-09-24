@@ -13,6 +13,7 @@ from src.db.db import get_async_session
 from ..schemas.auth import (
     LoginData,
     LoginResponse,
+    LogoutResponse,
     RefreshResponse,
     SignUpData,
     SignUpResponse,
@@ -34,6 +35,18 @@ async def get_user_me(
     user = await session.get_one(User, user_id)
 
     return APIResponse(success=True, data=user, error=None)
+
+
+@router.post(
+    "/refresh/delete",
+    response_model=APIResponse[LogoutResponse],
+    status_code=status.HTTP_200_OK,
+)
+async def logout(response: Response):
+    response.delete_cookie(key="refresh_token", samesite="lax", httponly=True)
+
+    data = LogoutResponse(message="logout_successful")
+    return APIResponse(success=True, data=data, error=None)
 
 
 @router.post(
@@ -75,7 +88,7 @@ async def login(
         httponly=True,
         secure=secure,  # True for prod
         samesite="lax",
-        max_age=60 * 60 * 24 * 7 # 7 days
+        max_age=60 * 60 * 24 * 7,  # 7 days
     )
 
     return APIResponse(success=True, data=data, error="")
@@ -102,7 +115,7 @@ async def signup(
         httponly=True,
         secure=secure,  # True for prod
         samesite="lax",
-        max_age=60 * 60 * 24 * 7 # 7 days
+        max_age=60 * 60 * 24 * 7,  # 7 days
     )
 
     return APIResponse(success=True, data=data, error=None)

@@ -4,5 +4,6 @@ export const urls = {
   LOGIN_URL: `${SERVER_URL}/auth/login`,
   SIGNUP_URL: `${SERVER_URL}/auth/signup`,
   GET_USER_URL: `${SERVER_URL}/auth/me`,
-  REFRESH: `${SERVER_URL}/auth/refresh`
+  REFRESH: `${SERVER_URL}/auth/refresh`,
+  LOGOUT: `${SERVER_URL}/auth/refresh/delete`
 };

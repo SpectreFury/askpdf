@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import type { User } from "@/types/home";
 import { Plus } from "lucide-react";
 import FileUpload from "./FileUpload";
+import Sessions from "./Sessions";
+import UserCard from "./UserCard";
 
 type DocumentUploadAsideProps = {
   user: User | null;
@@ -24,6 +26,10 @@ const DocumentUploadAside = ({ user }: DocumentUploadAsideProps) => {
       </div>
 
       <FileUpload />
+
+      <Sessions />
+
+      <UserCard />
     </aside>
   );
 };

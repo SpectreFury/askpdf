@@ -33,6 +33,8 @@ const FileUpload = () => {
   };
 
   const handleFileDrop = async (e: React.DragEvent<HTMLButtonElement>) => {
+    setIsDragging(false);
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -44,7 +46,7 @@ const FileUpload = () => {
 
   return (
     <button
-      className={`flex flex-col items-center border-2 border-primary/80 border-dashed rounded-md p-4 hover:cursor-pointer ${isDragging ? "bg-secondary/10" : ""}`}
+      className={`flex flex-col items-center border-2 border-primary/80 border-dashed rounded-md p-4 hover:cursor-pointer ${isDragging ? "bg-secondary/10" : "bg-none"}`}
       onClick={handleFileUploadClick}
       onDragEnter={handleDrag}
       onDragOver={handleDrag}
