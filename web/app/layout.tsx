@@ -26,9 +26,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${interSans.variable} ${spectralSans.variable} h-full antialiased`}
     >
-    <TanstackProvider>
-      <body className="min-h-full flex flex-col">{children}</body>
-    </TanstackProvider>
+      <body className="min-h-full flex flex-col">
+        <TanstackProvider>{children}</TanstackProvider>
+      </body>
     </html>
   );
 }

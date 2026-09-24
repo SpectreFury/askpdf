@@ -75,6 +75,7 @@ async def login(
         httponly=True,
         secure=secure,  # True for prod
         samesite="lax",
+        max_age=60 * 60 * 24 * 7 # 7 days
     )
 
     return APIResponse(success=True, data=data, error="")
@@ -101,6 +102,7 @@ async def signup(
         httponly=True,
         secure=secure,  # True for prod
         samesite="lax",
+        max_age=60 * 60 * 24 * 7 # 7 days
     )
 
     return APIResponse(success=True, data=data, error=None)

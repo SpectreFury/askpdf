@@ -1,5 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Notebook } from "lucide-react";
 import NavBar from "./_components/NavBar";
 import HeroSection from "./_components/HeroSection";
 
