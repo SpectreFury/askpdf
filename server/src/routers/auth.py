@@ -61,6 +61,8 @@ async def refresh_token(
     user_id: str = payload["sub"]
     user = await session.get_one(User, user_id)
 
+    # Maybe send an error response if no user
+
     access_token = encode_jwt(str(user.id), user.first_name, user.last_name, False)
 
     data = RefreshResponse(access_token=access_token)

@@ -16,8 +16,6 @@ security = HTTPBearer()
 
 
 def get_user_from_refresh_token(refresh_token: Annotated[str | None, Cookie()] = None):
-    print("RF token: ", refresh_token)
-
     if not refresh_token:
         raise NoRefreshTokenException()
 

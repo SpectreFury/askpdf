@@ -9,7 +9,6 @@ from src.schemas.api import APIResponse
 from .routers import auth
 from .db.db import engine, Base
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
