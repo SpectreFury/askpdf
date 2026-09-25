@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.exceptions import AppExceptions
 from src.schemas.api import APIResponse
 from .routers import auth
+from .routers import upload
 from .db.db import engine, Base
 
 @asynccontextmanager
@@ -39,3 +40,4 @@ async def app_exception_handler(request: Request, exc: AppExceptions):
 
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(upload.router, prefix="/upload", tags=["upload"])

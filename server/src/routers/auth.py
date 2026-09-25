@@ -1,5 +1,4 @@
 import os
-from typing import Annotated
 from fastapi import APIRouter, Depends, Response, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
