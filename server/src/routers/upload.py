@@ -14,7 +14,6 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
 )
 async def generate_url(user_id: str = Depends(get_current_user)):
-    link = await generate_presigned_link()
+    options = await generate_presigned_link()
 
-    data = PresignedURLResponse(url = link)
-    return APIResponse(success=True, data=data, error=None)
+    return APIResponse(success=True, data=options, error=None)

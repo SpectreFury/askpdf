@@ -1,4 +1,9 @@
 from pydantic import BaseModel
 
+
 class PresignedURLResponse(BaseModel):
-    url: str
+    signature: str
+    timestamp: int
+    folder: str
+    api_key: str
+    cloud_name: str

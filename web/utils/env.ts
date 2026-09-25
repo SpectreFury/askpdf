@@ -9,5 +9,5 @@ export const urls = {
   LOGOUT: `${SERVER_URL}/auth/refresh/delete`,
 
   // UPLOAD
-  PRESIGNED_URL: `${SERVER_URL}/upload/generate-presigned-url`
+  PRESIGNED_URL: `${SERVER_URL}/upload/generate-presigned-url`,
 };

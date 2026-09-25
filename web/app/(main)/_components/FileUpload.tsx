@@ -2,11 +2,18 @@
 
 import { useState, useRef } from "react";
 import { CloudBackup } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { uploadFile } from "../_api/workspace";
 
 const FileUpload = () => {
-  const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const {mutate, isPending, isError, error } = useMutation({
+    mutationFn: (file: File) => uploadFile(file),
+    onSuccess: () => {},
+    onError: () => {},
+  });
 
   const handleFileUploadClick = () => {
     inputRef.current?.click();
@@ -27,9 +34,10 @@ const FileUpload = () => {
     if (!e.target.files || !e.target.files.length) return;
 
     const file = e.target.files[0];
-    setFile(file);
 
     // Upload the file -> Make a new session -> Shift the user to that session -> Process the document something like that I guess
+
+    mutate(file)
   };
 
   const handleFileDrop = async (e: React.DragEvent<HTMLButtonElement>) => {
@@ -41,7 +49,7 @@ const FileUpload = () => {
     if (!e.dataTransfer.files.length) return;
 
     const file = e.dataTransfer.files[0];
-    setFile(file);
+    mutate(file)
   };
 
   return (
