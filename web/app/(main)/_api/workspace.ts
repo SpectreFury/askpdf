@@ -47,6 +47,6 @@ export const uploadFile = async (file: File) => {
   if(!sessionResponse) throw new Error("Unable to create session")
 
   const sessionResult = await sessionResponse.json();
-  console.log("Session Result: ", sessionResult)
 
+  return sessionResult
 };

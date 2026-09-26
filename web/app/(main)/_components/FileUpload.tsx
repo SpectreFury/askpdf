@@ -4,14 +4,21 @@ import { useState, useRef } from "react";
 import { CloudBackup } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { uploadFile } from "../_api/workspace";
+import { APIResponse } from "@/types/api";
+import {useRouter} from 'next/navigation'
 
 const FileUpload = () => {
+  const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {mutate, isPending, isError, error } = useMutation({
     mutationFn: (file: File) => uploadFile(file),
-    onSuccess: () => {},
+    onSuccess: (result: APIResponse) => {
+      const sessionId = result.data.session_id
+
+      router.push(`/workspace/${sessionId}`)
+    },
     onError: () => {},
   });
 

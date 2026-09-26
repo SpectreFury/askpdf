@@ -7,6 +7,8 @@ from src.dependencies.security import get_current_user
 from src.exceptions import NoDocumentURLException
 from src.schemas.api import APIResponse
 from src.schemas.session import CreateSessionData, CreateSessionResponse
+from ..utils.celery_app import rag_pipeline
+
 
 router = APIRouter()
 
@@ -24,6 +26,7 @@ async def create_session(
     if not body.secure_url:
         raise NoDocumentURLException()
 
+
     new_item = Session(
         title="New Session",
         document_id=body.secure_url,
@@ -34,6 +37,10 @@ async def create_session(
 
     await session.commit()
     await session.refresh(new_item)
+
+    # We have secure_url so it means we need to send request to injest the PDF
+
+    rag_pipeline.delay(body.secure_url)
 
     data = CreateSessionResponse(session_id=str(new_item.id))
     return APIResponse(success=True, data=data, error=None)
