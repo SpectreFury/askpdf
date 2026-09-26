@@ -10,4 +10,7 @@ export const urls = {
 
   // UPLOAD
   PRESIGNED_URL: `${SERVER_URL}/upload/generate-presigned-url`,
+
+  // SESSION
+  CREATE_SESSION: `${SERVER_URL}/session`
 };

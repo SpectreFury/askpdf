@@ -44,3 +44,7 @@ class ExpiredTokenException(AppExceptions):
 class NoRefreshTokenException(AppExceptions):
     def __init__(self, message: str = "No refresh token cookie"):
         super().__init__(message=message, status_code=401)
+
+class NoDocumentURLException(AppExceptions):
+    def __init__(self, message: str = "No document url found"):
+        super().__init__(message=message, status_code=404)
