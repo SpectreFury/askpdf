@@ -23,13 +23,13 @@ async def create_session(
     session: AsyncSession = Depends(get_async_session),
     user_id: str = Depends(get_current_user),
 ):
-    if not body.secure_url:
+    if not body.public_id:
         raise NoDocumentURLException()
 
 
     new_item = Session(
         title="New Session",
-        document_id=body.secure_url,
+        document_id=body.public_id,
         user_id=user_id
     )
 
@@ -40,7 +40,7 @@ async def create_session(
 
     # We have secure_url so it means we need to send request to injest the PDF
 
-    rag_pipeline.delay(body.secure_url)
+    rag_pipeline.delay(body.public_id, new_item.id)
 
     data = CreateSessionResponse(session_id=str(new_item.id))
     return APIResponse(success=True, data=data, error=None)

@@ -19,7 +19,10 @@ async def generate_presigned_link() -> PresignedURLResponse:
 
     timestamp = int(time.time())
     folder = "user_documents"
-    params_to_sign = {"timestamp": timestamp, "folder": folder}
+    params_to_sign = {
+            "timestamp": timestamp,
+            "folder": folder
+            }
 
     signature = cloudinary.utils.api_sign_request(params_to_sign, config.api_secret)
 

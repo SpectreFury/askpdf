@@ -22,7 +22,7 @@ export const uploadFile = async (file: File) => {
   formData.append("api_key", api_key);
   formData.append("folder", folder);
 
-  const url = `https://api.cloudinary.com/v1_1/${cloud_name}/raw/upload`;
+  const url = `https://api.cloudinary.com/v1_1/${cloud_name}/auto/upload`;
   const uploadResponse = await fetch(url, {
     method: "POST",
     body: formData,
@@ -40,7 +40,7 @@ export const uploadFile = async (file: File) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      secure_url: uploadResult.secure_url,
+      public_id: uploadResult.public_id
     }),
   });
 

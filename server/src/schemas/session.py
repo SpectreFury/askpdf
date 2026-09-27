@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 class CreateSessionData(BaseModel):
-    secure_url: str
+    public_id: str
 
 class CreateSessionResponse(BaseModel):
     session_id: str
