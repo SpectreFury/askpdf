@@ -19,8 +19,8 @@ const WorkspacePage = () => {
 
   return (
     <>
-      <DocumentRenderer />
-      <ConversationAside />
+      {/* <DocumentRenderer /> */}
+      {/* <ConversationAside /> */}
     </>
   );
 };
