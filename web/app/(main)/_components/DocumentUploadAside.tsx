@@ -1,18 +1,13 @@
 import { Button } from "@/components/ui/button";
-import type { User } from "@/types/home";
 import { Plus } from "lucide-react";
 import FileUpload from "./FileUpload";
 import Sessions from "./Sessions";
 import UserCard from "./UserCard";
 
-type DocumentUploadAsideProps = {
-  user: User | null;
-};
-
-const DocumentUploadAside = ({ user }: DocumentUploadAsideProps) => {
+const DocumentUploadAside = () => {
   return (
-    <aside className="h-full flex flex-col gap-4 min-w-80 bg-sidebar p-4">
-      <div className="flex items-center">
+    <aside className="h-full flex min-h-0 min-w-80 flex-col gap-4 overflow-hidden bg-sidebar p-4">
+      <div className="flex shrink-0 items-center">
         <div className="w-full flex items-center gap-2">
           <div className="font-display font-medium uppercase bg-primary px-2 rounded text-white">
             L

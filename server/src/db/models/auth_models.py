@@ -2,7 +2,7 @@ import datetime
 import uuid
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Column, ForeignKey, String, Text, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from ..db import Base
 
@@ -36,5 +36,10 @@ class Session(Base):
     )
     title: Mapped[str] = mapped_column(nullable=False)
     document_id: Mapped[str] = mapped_column(nullable=True)
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.datetime.now(datetime.timezone.utc),
+    )
     user: Mapped["User"] = relationship(back_populates="sessions")

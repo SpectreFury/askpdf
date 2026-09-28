@@ -1,12 +1,11 @@
 import os
-import time
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_chroma.vectorstores import Chroma
 from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 import requests
-from ..utils.cloudinary import cloudinary
+from ..utils.cloudinary import secure_download_url
 
 embeddings = GoogleGenerativeAIEmbeddings(model = "gemini-embedding-2")
 
@@ -18,13 +17,7 @@ def download_file(public_id: str):
 
     output_path = "downloaded/" + cleaned_public_id + "/" + "file.pdf"
 
-    secure_url = cloudinary.utils.private_download_url(
-        public_id=cleaned_public_id,
-        format="pdf",
-        resource_type="image",
-        type="upload",
-        expires_at=int(time.time() + 600),
-    )
+    secure_url = secure_download_url(cleaned_public_id)
 
     response = requests.get(secure_url)
 
@@ -81,6 +74,8 @@ def injest_pdf(output_path: str, session_id: str):
 
     vector_store.add_documents(chunks, ids=chunk_ids)
     print(f"Successfully ingested {len(chunks)} chunks into isolated collection: {collection_name}")
+
+    return len(pdf_list), "\n".join(page.page_content for page in pdf_list)
 
 
 def load_pdf(path: str):

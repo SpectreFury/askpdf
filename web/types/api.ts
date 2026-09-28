@@ -3,3 +3,5 @@ export type APIResponse = {
   data: any;
   error: string;
 };
+
+export type APIResponseOf<T> = Omit<APIResponse, "data"> & { data: T };

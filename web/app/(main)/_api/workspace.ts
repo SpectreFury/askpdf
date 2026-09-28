@@ -1,5 +1,27 @@
 import { urls } from "@/utils/env";
 import { fetchWithInterceptor } from "@/utils/fetch-interceptor";
+import type { APIResponseOf } from "@/types/api";
+import type { SessionListItem, SessionResponse } from "@/types/session";
+
+export const fetchSessions = async () => {
+  const response = await fetchWithInterceptor(urls.LIST_SESSIONS, {
+    credentials: "include",
+  });
+
+  if (!response.ok) throw new Error("Unable to load sessions");
+
+  return (await response.json()) as APIResponseOf<SessionListItem[]>;
+};
+
+export const fetchSession = async (sessionId: string) => {
+  const response = await fetchWithInterceptor(urls.GET_SESSION(sessionId), {
+    credentials: "include",
+  });
+
+  if (!response.ok) throw new Error("Unable to load session");
+
+  return (await response.json()) as APIResponseOf<SessionResponse>;
+};
 
 export const uploadFile = async (file: File) => {
   // Get the presigned url
@@ -40,7 +62,8 @@ export const uploadFile = async (file: File) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      public_id: uploadResult.public_id
+      public_id: uploadResult.public_id,
+      filename: file.name,
     }),
   });
 

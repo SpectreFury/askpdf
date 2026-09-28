@@ -48,3 +48,7 @@ class NoRefreshTokenException(AppExceptions):
 class NoDocumentURLException(AppExceptions):
     def __init__(self, message: str = "No document url found"):
         super().__init__(message=message, status_code=404)
+
+class SessionNotFoundException(AppExceptions):
+    def __init__(self, message: str = "Session not found"):
+        super().__init__(message=message, status_code=404)

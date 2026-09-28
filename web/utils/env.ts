@@ -12,5 +12,12 @@ export const urls = {
   PRESIGNED_URL: `${SERVER_URL}/upload/generate-presigned-url`,
 
   // SESSION
-  CREATE_SESSION: `${SERVER_URL}/session`
+  CREATE_SESSION: `${SERVER_URL}/session`,
+  LIST_SESSIONS: `${SERVER_URL}/session`,
+  GET_SESSION: (sessionId: string) => `${SERVER_URL}/session/${sessionId}`,
+
+  // CHAT
+  ASK_QUESTION: (sessionId: string) => `${SERVER_URL}/session/${sessionId}/ask`,
+  SUGGESTED_QUESTIONS: (sessionId: string) =>
+    `${SERVER_URL}/session/${sessionId}/suggestions`
 };

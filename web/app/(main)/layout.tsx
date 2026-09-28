@@ -5,7 +5,7 @@ import DocumentUploadAside from "./_components/DocumentUploadAside";
 const ApplicationLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <main className="w-full h-screen flex">
-      <DocumentUploadAside user={null} />
+      <DocumentUploadAside />
       {children}
     </main>
   );

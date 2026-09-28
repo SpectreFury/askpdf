@@ -5,6 +5,5 @@
 - [x] Refresh token handling (check if it's reaching frontend)
 - [x] Renew route
 
-TODO
-
-UI
+Ingestion works right now
+We need to make the frontend for the PDF rendering

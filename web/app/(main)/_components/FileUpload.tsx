@@ -2,13 +2,14 @@
 
 import { useState, useRef } from "react";
 import { CloudBackup } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { uploadFile } from "../_api/workspace";
 import { APIResponse } from "@/types/api";
 import {useRouter} from 'next/navigation'
 
 const FileUpload = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -17,6 +18,7 @@ const FileUpload = () => {
     onSuccess: (result: APIResponse) => {
       const sessionId = result.data.session_id
 
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
       router.push(`/workspace/${sessionId}`)
     },
     onError: () => {},
@@ -61,7 +63,7 @@ const FileUpload = () => {
 
   return (
     <button
-      className={`flex flex-col items-center border-2 border-primary/80 border-dashed rounded-md p-4 hover:cursor-pointer ${isDragging ? "bg-secondary/10" : "bg-none"}`}
+      className={`flex w-full shrink-0 flex-col items-center border-2 border-primary/80 border-dashed rounded-md p-4 hover:cursor-pointer ${isDragging ? "bg-secondary/10" : "bg-none"}`}
       onClick={handleFileUploadClick}
       onDragEnter={handleDrag}
       onDragOver={handleDrag}

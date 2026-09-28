@@ -1,11 +1,13 @@
 import ConversationAside from "../../_components/ConversationAside";
 import DocumentRenderer from "../../_components/DocumentRenderer";
 
-const WorkspaceSession = () => {
+const WorkspaceSession = async ({ params }: PageProps<"/workspace/[sessionId]">) => {
+  const { sessionId } = await params;
+
   return (
     <>
-      <DocumentRenderer />
-      <ConversationAside />
+      <DocumentRenderer sessionId={sessionId} />
+      <ConversationAside sessionId={sessionId} />
     </>
   );
 };
