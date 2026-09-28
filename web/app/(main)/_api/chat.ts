@@ -15,18 +15,14 @@ async function readError(response: Response) {
   }
 }
 
-export const askQuestion = async (
-  sessionId: string,
-  question: string,
-  citationsOnly: boolean
-) => {
+export const askQuestion = async (sessionId: string, question: string) => {
   const response = await fetchWithInterceptor(urls.ASK_QUESTION(sessionId), {
     method: "POST",
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ question, citations_only: citationsOnly }),
+    body: JSON.stringify({ question }),
   });
 
   if (!response.ok) throw new Error(await readError(response));
@@ -42,17 +38,6 @@ export const fetchMessages = async (sessionId: string) => {
   if (!response.ok) throw new Error(await readError(response));
 
   return (await response.json()) as APIResponseOf<MessageResponse[]>;
-};
-
-export const deleteMessages = async (sessionId: string) => {
-  const response = await fetchWithInterceptor(urls.MESSAGES(sessionId), {
-    method: "DELETE",
-    credentials: "include",
-  });
-
-  if (!response.ok) throw new Error(await readError(response));
-
-  return (await response.json()) as APIResponseOf<{ message: string }>;
 };
 
 export const fetchSuggestedQuestions = async (sessionId: string) => {

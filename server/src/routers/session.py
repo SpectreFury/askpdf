@@ -19,8 +19,6 @@ from src.schemas.api import APIResponse
 from src.schemas.chat import (
     AnswerResponse,
     AskQuestionData,
-    Citation,
-    ClearMessagesResponse,
     MessageResponse,
 )
 from src.schemas.session import (
@@ -30,8 +28,8 @@ from src.schemas.session import (
     SessionResponse,
 )
 from src.services.chat_service import ChatService
-from ..rag_pipeline.answer import NO_CONTEXT_ANSWER, generate_answer, parse_citations
-from ..rag_pipeline.retrieval import build_search_query, retrieve_blocks
+from ..rag_pipeline.answer import NO_CONTEXT_ANSWER, generate_answer
+from ..rag_pipeline.retrieval import retrieve_blocks
 from ..utils.celery_app import rag_pipeline
 from ..utils.cloudinary import secure_download_url
 
@@ -94,7 +92,7 @@ async def create_session(
 
     # We have secure_url so it means we need to send request to injest the PDF
 
-    rag_pipeline.delay(body.public_id, new_item.id)
+    rag_pipeline.delay(body.public_id, str(new_item.id))
 
     data = CreateSessionResponse(session_id=str(new_item.id))
     return APIResponse(success=True, data=data, error=None)
@@ -167,34 +165,31 @@ async def ask_question(
     await require_owned_session(session, session_id, user_id)
 
     service = ChatService(session)
-    history = await service.load_history(session_id)
 
     try:
         # Chroma and the model are both blocking, so they stay off the event loop.
+        # Each question is answered statelessly: no conversation history is
+        # loaded or fed into retrieval or generation. Past turns are only
+        # stored (see save_exchange below) and rendered by the frontend.
         blocks = await asyncio.to_thread(
             retrieve_blocks,
             str(session_id),
-            build_search_query(history, body.question),
+            body.question,
         )
     except NotFoundError:
         raise DocumentNotReadyException()
 
     if not blocks:
         answer = NO_CONTEXT_ANSWER
-        citations: list[dict] = []
     else:
-        answer = await asyncio.to_thread(
-            generate_answer, body.question, history, blocks, body.citations_only
-        )
+        answer = await asyncio.to_thread(generate_answer, body.question, blocks)
 
         if not answer.strip():
             answer = NO_CONTEXT_ANSWER
 
-        citations = parse_citations(answer, blocks)
+    await service.save_exchange(session_id, body.question, answer)
 
-    await service.save_exchange(session_id, body.question, answer, citations)
-
-    data = AnswerResponse(answer=answer, citations=[Citation(**c) for c in citations])
+    data = AnswerResponse(answer=answer)
 
     return APIResponse(success=True, data=data, error=None)
 
@@ -218,30 +213,10 @@ async def list_messages(
             id=str(message.id),
             role=message.role,
             content=message.content,
-            citations=[Citation(**c) for c in message.citations or []],
             created_at=message.created_at,
         )
         for message in items
     ]
-
-    return APIResponse(success=True, data=data, error=None)
-
-
-@router.delete(
-    "/{session_id}/messages",
-    response_model=APIResponse[ClearMessagesResponse],
-    status_code=status.HTTP_200_OK,
-)
-async def clear_messages(
-    session_id: UUID,
-    session: AsyncSession = Depends(get_async_session),
-    user_id: str = Depends(get_current_user),
-):
-    await require_owned_session(session, session_id, user_id)
-
-    await ChatService(session).delete_messages(session_id)
-
-    data = ClearMessagesResponse(message="messages_cleared")
 
     return APIResponse(success=True, data=data, error=None)
 

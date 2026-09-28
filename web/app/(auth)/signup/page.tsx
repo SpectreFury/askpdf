@@ -20,10 +20,10 @@ const SignUpPage = () => {
 
             <div className="flex flex-col gap-4 mt-4">
               <SignUpListItems
-                text="Verifiable Citations"
+                text="Instant Answers"
                 description="
-          No more hallucinated references. Every claim maps to exact
-          bounding-box highlights on original PDFs.
+          Ask anything about your documents and get grounded answers
+          in seconds.
           "
               />
 

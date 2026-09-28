@@ -16,7 +16,7 @@ const HeroSection = () => {
         <p className="mt-4 italic text-xl font-display text-secondary font-base">
           AskPDF instantly parses your complex academic papers, climate policy
           reports and financial briefs. Ask questions and get instant answers
-          backend by verifiable in-line citations{" "}
+          grounded in your documents{" "}
         </p>
 
         <div className="mt-10 flex items-center gap-4">

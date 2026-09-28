@@ -1,6 +1,7 @@
+import os
 import re
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_ollama import ChatOllama
 
 from .models import CHAT_MODEL
 
@@ -24,9 +25,11 @@ def generate_suggestions(sample_text: str) -> list[str]:
     prompt = PROMPT + sample_text[:SAMPLE_LIMIT]
 
     try:
-        # Built lazily so the worker stays importable without a usable API key.
-        # No temperature: Gemini 3+ rejects custom sampling values.
-        model = ChatGoogleGenerativeAI(model=CHAT_MODEL, thinking_level="low")
+        model = ChatOllama(
+            model=CHAT_MODEL,
+            base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            temperature=0,
+        )
 
         content = model.invoke(prompt).content
         text = content if isinstance(content, str) else str(content)

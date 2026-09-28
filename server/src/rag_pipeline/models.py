@@ -1,9 +1,9 @@
-# Single source of truth for model ids. Gemini 2.5 Flash is closed to new
-# projects, 3.8 Flash keeps returning RESOURCE_EXHAUSTED on this key, and model
-# names are the part of this pipeline that churns fastest, so they live here
-# rather than being repeated in each module.
-CHAT_MODEL = "gemini-3.5-flash"
+# Single source of truth for model ids. Local Ollama models so the pipeline
+# runs without a cloud API key. They live here rather than being repeated in
+# each module.
+CHAT_MODEL = "llama3.1:8b"
 
-# 3072 dimensional, and the vector space every stored collection was written
-# with. Changing this invalidates every existing collection.
-EMBEDDING_MODEL = "gemini-embedding-2"
+# 768 dimensional via Ollama's nomic-embed-text, and the vector space every
+# stored collection is written with. Changing this invalidates every existing
+# collection.
+EMBEDDING_MODEL = "nomic-embed-text"

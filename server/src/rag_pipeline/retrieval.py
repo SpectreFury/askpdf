@@ -5,23 +5,10 @@ from .store import MAX_BLOCKS, SCORE_CUTOFF, TOP_K, open_collection
 
 @dataclass
 class ContextBlock:
-    """A retrieved chunk, numbered so the model can cite it."""
+    """A retrieved chunk handed to the model as context."""
 
-    index: int
     text: str
     page: int
-
-
-def build_search_query(history: list[tuple[str, str]], question: str) -> str:
-    """Carry the previous question so follow ups like "and on GDP?" still retrieve.
-
-    Cheaper than an extra model call to rewrite the question, and enough to
-    resolve what "it" refers to.
-    """
-    if not history:
-        return question
-
-    return f"{history[-1][0]} {question}"
 
 
 def retrieve_blocks(session_id: str, query: str) -> list[ContextBlock]:
@@ -50,7 +37,7 @@ def retrieve_blocks(session_id: str, query: str) -> list[ContextBlock]:
             continue
 
         seen.add(fingerprint)
-        blocks.append(ContextBlock(index=len(blocks) + 1, text=text, page=page))
+        blocks.append(ContextBlock(text=text, page=page))
 
         if len(blocks) >= MAX_BLOCKS:
             break

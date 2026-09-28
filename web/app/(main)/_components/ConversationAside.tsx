@@ -1,17 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessagesSquare, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  askQuestion,
-  deleteMessages,
-  fetchMessages,
-  fetchSuggestedQuestions,
-} from "../_api/chat";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { MessagesSquare } from "lucide-react";
+import { askQuestion, fetchMessages, fetchSuggestedQuestions } from "../_api/chat";
 import { fetchSession } from "../_api/workspace";
-import type { APIResponseOf } from "@/types/api";
 import type { ChatMessage, MessageResponse } from "@/types/chat";
 import ChatComposer from "./ChatComposer";
 import ChatMessageItem from "./ChatMessageItem";
@@ -23,13 +16,6 @@ type ConversationAsideProps = {
 
 type AskVariables = {
   question: string;
-  citationsOnly: boolean;
-};
-
-const EMPTY_MESSAGES: APIResponseOf<MessageResponse[]> = {
-  success: true,
-  data: [],
-  error: "",
 };
 
 const toChatMessage = (message: MessageResponse): ChatMessage => ({
@@ -37,18 +23,15 @@ const toChatMessage = (message: MessageResponse): ChatMessage => ({
   role: message.role,
   content: message.content,
   created_at: message.created_at,
-  citations: message.citations,
 });
 
 const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
-  const [citationsOnly, setCitationsOnly] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
   const threadRef = useRef<HTMLDivElement>(null);
   const hydratedSession = useRef<string | null>(null);
-  const queryClient = useQueryClient();
 
   const { data: session } = useQuery({
     queryKey: ["session", sessionId],
@@ -84,8 +67,8 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
   }, [messages]);
 
   const askMutation = useMutation({
-    mutationFn: ({ question, citationsOnly }: AskVariables) =>
-      askQuestion(sessionId, question, citationsOnly),
+    mutationFn: ({ question }: AskVariables) =>
+      askQuestion(sessionId, question),
 
     onMutate: ({ question }) => {
       setSendError(null);
@@ -95,7 +78,6 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
         role: "user",
         content: question,
         created_at: new Date().toISOString(),
-        citations: [],
       };
 
       const pendingMessage: ChatMessage = {
@@ -103,7 +85,6 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
         role: "assistant",
         content: "",
         created_at: new Date().toISOString(),
-        citations: [],
         status: "pending",
       };
 
@@ -120,7 +101,6 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
             ? {
                 ...message,
                 content: result?.data?.answer ?? "",
-                citations: result?.data?.citations ?? [],
                 status: undefined,
               }
             : message
@@ -151,24 +131,12 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
     },
   });
 
-  const clearMutation = useMutation({
-    mutationFn: () => deleteMessages(sessionId),
-    onSuccess: () => {
-      queryClient.setQueryData(["messages", sessionId], EMPTY_MESSAGES);
-
-      setMessages([]);
-      setQuestion("");
-      setSendError(null);
-    },
-    onError: () => setSendError("We couldn't clear this conversation."),
-  });
-
   const submitQuestion = (nextQuestion: string) => {
     const trimmed = nextQuestion.trim();
 
     if (!trimmed) return;
 
-    askMutation.mutate({ question: trimmed, citationsOnly });
+    askMutation.mutate({ question: trimmed });
   };
 
   return (
@@ -176,17 +144,6 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
       <div className="flex shrink-0 items-center gap-2">
         <MessagesSquare className="size-4 text-primary" />
         <span className="text-sm font-bold">Conversational Q&amp;A</span>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => clearMutation.mutate()}
-          disabled={messages.length === 0 || clearMutation.isPending}
-          className="ml-auto cursor-pointer"
-        >
-          <RotateCcw />
-          Reset
-        </Button>
       </div>
 
       <div
@@ -215,8 +172,6 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
       <ChatComposer
         value={question}
         onValueChange={setQuestion}
-        citationsOnly={citationsOnly}
-        onCitationsOnlyChange={setCitationsOnly}
         onSubmit={() => submitQuestion(question)}
         isPending={askMutation.isPending}
         placeholder={`Ask a question about ${

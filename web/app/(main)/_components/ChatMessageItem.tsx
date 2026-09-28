@@ -1,7 +1,7 @@
 'use client';
 
 import { LoaderCircle, Sparkles } from "lucide-react";
-import type { ChatMessage, Citation } from "@/types/chat";
+import type { ChatMessage } from "@/types/chat";
 
 type ChatMessageItemProps = {
   message: ChatMessage;
@@ -12,14 +12,6 @@ function formatTime(value: string) {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-function citationLabel(citation: Citation) {
-  const page = `Page ${citation.page}`;
-
-  return citation.paragraph === null
-    ? page
-    : `${page}, Paragraph ${citation.paragraph}`;
 }
 
 const ChatMessageItem = ({ message }: ChatMessageItemProps) => {
@@ -58,20 +50,6 @@ const ChatMessageItem = ({ message }: ChatMessageItemProps) => {
         <p className="text-sm leading-relaxed text-foreground">
           {message.content}
         </p>
-      )}
-
-      {message.citations.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <span className="text-xs text-secondary">Citations:</span>
-          {message.citations.map((citation, index) => (
-            <span
-              key={`${citation.page}-${citation.paragraph ?? index}`}
-              className="rounded border border-border bg-secondary/10 px-1.5 py-0.5 text-[10px] text-secondary"
-            >
-              {citationLabel(citation)}
-            </span>
-          ))}
-        </div>
       )}
     </div>
   );

@@ -1,14 +1,11 @@
 'use client';
 
-import { ArrowUp, Pin } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 type ChatComposerProps = {
   value: string;
   onValueChange: (value: string) => void;
-  citationsOnly: boolean;
-  onCitationsOnlyChange: (citationsOnly: boolean) => void;
   onSubmit: () => void;
   isPending?: boolean;
   placeholder: string;
@@ -17,8 +14,6 @@ type ChatComposerProps = {
 const ChatComposer = ({
   value,
   onValueChange,
-  citationsOnly,
-  onCitationsOnlyChange,
   onSubmit,
   isPending = false,
   placeholder,
@@ -41,22 +36,7 @@ const ChatComposer = ({
         className="w-full resize-none bg-transparent text-sm outline-none placeholder:text-secondary"
       />
 
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => onCitationsOnlyChange(!citationsOnly)}
-          aria-pressed={citationsOnly}
-          className={cn(
-            "flex items-center gap-1.5 text-xs transition-colors",
-            citationsOnly
-              ? "text-primary"
-              : "text-secondary hover:text-foreground"
-          )}
-        >
-          <Pin className="size-3.5" />
-          Citations only
-        </button>
-
+      <div className="mt-2 flex items-center justify-end gap-2">
         <Button
           type="button"
           size="icon"

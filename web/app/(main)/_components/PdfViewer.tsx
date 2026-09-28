@@ -39,16 +39,48 @@ type DocumentCallback = Parameters<
 type PdfViewerProps = {
   fileUrl?: string;
   title?: string;
+  sessionId?: string;
 };
 
-const PdfViewer = ({ fileUrl, title }: PdfViewerProps) => {
+const PdfViewer = ({ fileUrl, title, sessionId }: PdfViewerProps) => {
   const [numPages, setNumPages] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageInput, setPageInput] = useState("1");
   const [zoom, setZoom] = useState(100);
   const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO);
+  // First signed URL wins for the session. The session query regenerates the
+  // signed document_url on every refetch, and feeding each new string into
+  // <Document file> would reload the PDF and drop the user back to page 1.
+  const [activeFileUrl, setActiveFileUrl] = useState<string | undefined>(
+    fileUrl,
+  );
+  const [prevFileUrl, setPrevFileUrl] = useState(fileUrl);
+  const [prevSessionId, setPrevSessionId] = useState(sessionId);
+
+  // Adjust state during render when the document identity changes (the
+  // documented alternative to setState-in-effect for derived state).
+  if (sessionId !== prevSessionId) {
+    setPrevSessionId(sessionId);
+    setPrevFileUrl(fileUrl);
+    setActiveFileUrl(fileUrl);
+    setNumPages(0);
+    setPageNumber(1);
+    setPageInput("1");
+  } else if (fileUrl !== prevFileUrl) {
+    setPrevFileUrl(fileUrl);
+    // Same-session refetches only rotate the signature; keep the loaded PDF
+    // mounted. A new document arrives via a sessionId change above.
+    if (!activeFileUrl && fileUrl) {
+      setActiveFileUrl(fileUrl);
+    }
+  }
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef(pageNumber);
+
+  useEffect(() => {
+    pageRef.current = pageNumber;
+  }, [pageNumber]);
 
   const pageWidth = Math.round((PAGE_WIDTH * zoom) / 100);
   const reservedHeight = Math.round(pageWidth * aspectRatio);
@@ -69,7 +101,12 @@ const PdfViewer = ({ fileUrl, title }: PdfViewerProps) => {
 
   async function onDocumentLoadSuccess(pdf: DocumentCallback) {
     setNumPages(pdf.numPages);
-    goToPage(1);
+    // Preserve the current page across Document reloads (e.g. a refetch that
+    // slipped through); only clamp it into the freshly loaded page range.
+    const clamped = Math.min(Math.max(1, pageRef.current), pdf.numPages);
+    pageRef.current = clamped;
+    setPageNumber(clamped);
+    setPageInput(String(clamped));
 
     try {
       const firstPage = await pdf.getPage(1);
@@ -97,7 +134,9 @@ const PdfViewer = ({ fileUrl, title }: PdfViewerProps) => {
   }
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col bg-muted/30">
+    // min-h-0 lets the scroll area below shrink to the viewport instead of
+    // stretching the whole app shell (which would scroll the sidebars away).
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-muted/30">
       <div className="flex h-14 shrink-0 items-center gap-3 border-b bg-background px-4">
         <div className="flex min-w-0 items-center gap-2">
           <FileText className="size-4 shrink-0 text-secondary" />
@@ -168,15 +207,16 @@ const PdfViewer = ({ fileUrl, title }: PdfViewerProps) => {
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-auto p-6">
-        {/* minHeight reserves the page box before the canvas exists, so the
-            swap from skeleton to rendered page does not move the layout */}
+        {/* The stage is pinned to the exact page box (width + minHeight), and
+            every loading fallback below renders at those same dimensions, so
+            switching pages never collapses or reflows the layout */}
         <div
           className="mx-auto w-fit"
           style={{ width: pageWidth, minHeight: reservedHeight }}
         >
-          {fileUrl ? (
+          {activeFileUrl ? (
             <Document
-              file={fileUrl}
+              file={activeFileUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div
@@ -197,7 +237,16 @@ const PdfViewer = ({ fileUrl, title }: PdfViewerProps) => {
                 pageNumber={pageNumber}
                 width={pageWidth}
                 className="rounded-sm border border-border shadow-sm"
-                loading={<div className="h-full w-full bg-card" />}
+                // Explicit box matching the rendered canvas: the old `h-full
+                // w-full` placeholder resolved against the mid-load wrapper
+                // (no intrinsic size), collapsing the stage on every page
+                // switch. The border/shadow live on the wrapper so they persist.
+                loading={
+                  <div
+                    className="bg-card"
+                    style={{ width: pageWidth, height: reservedHeight }}
+                  />
+                }
               />
             </Document>
           ) : (

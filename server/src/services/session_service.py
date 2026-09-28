@@ -10,7 +10,7 @@ from src.db.models.auth_models import Session
 
 
 def update_document_info(
-    session_id: str,
+    session_id: str | UUID,
     page_count: int,
     title: str | None = None,
     suggested_questions: list[str] | None = None,
@@ -29,7 +29,7 @@ def update_document_info(
 
 
 async def _update_document_info(
-    session_id: str,
+    session_id: str | UUID,
     page_count: int,
     title: str | None,
     suggested_questions: list[str] | None,
@@ -50,8 +50,11 @@ async def _update_document_info(
         )
 
         async with session_factory() as session:
+            session_uuid = (
+                session_id if isinstance(session_id, UUID) else UUID(str(session_id))
+            )
             await session.execute(
-                update(Session).where(Session.id == UUID(session_id)).values(**values)
+                update(Session).where(Session.id == session_uuid).values(**values)
             )
             await session.commit()
     finally:
