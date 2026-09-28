@@ -1,7 +1,19 @@
 import { urls } from "@/utils/env";
 import { fetchWithInterceptor } from "@/utils/fetch-interceptor";
 import type { APIResponseOf } from "@/types/api";
-import type { AskQuestionData } from "@/types/chat";
+import type { AskQuestionData, MessageResponse } from "@/types/chat";
+
+// Failures are explained by the server, for example a document that is still
+// being ingested, so surface the envelope message instead of a generic failure.
+async function readError(response: Response) {
+  try {
+    const result = (await response.json()) as APIResponseOf<unknown>;
+
+    return result?.error || "Something went wrong.";
+  } catch {
+    return "Something went wrong.";
+  }
+}
 
 export const askQuestion = async (
   sessionId: string,
@@ -17,9 +29,30 @@ export const askQuestion = async (
     body: JSON.stringify({ question, citations_only: citationsOnly }),
   });
 
-  if (!response.ok) throw new Error("Unable to send question");
+  if (!response.ok) throw new Error(await readError(response));
 
   return (await response.json()) as APIResponseOf<AskQuestionData>;
+};
+
+export const fetchMessages = async (sessionId: string) => {
+  const response = await fetchWithInterceptor(urls.MESSAGES(sessionId), {
+    credentials: "include",
+  });
+
+  if (!response.ok) throw new Error(await readError(response));
+
+  return (await response.json()) as APIResponseOf<MessageResponse[]>;
+};
+
+export const deleteMessages = async (sessionId: string) => {
+  const response = await fetchWithInterceptor(urls.MESSAGES(sessionId), {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  if (!response.ok) throw new Error(await readError(response));
+
+  return (await response.json()) as APIResponseOf<{ message: string }>;
 };
 
 export const fetchSuggestedQuestions = async (sessionId: string) => {
@@ -28,7 +61,7 @@ export const fetchSuggestedQuestions = async (sessionId: string) => {
     { credentials: "include" }
   );
 
-  if (!response.ok) throw new Error("Unable to load suggested questions");
+  if (!response.ok) throw new Error(await readError(response));
 
   return (await response.json()) as APIResponseOf<string[]>;
 };

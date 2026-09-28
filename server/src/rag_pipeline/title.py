@@ -1,6 +1,7 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-TITLE_MODEL = "gemini-2.5-flash"
+from .models import CHAT_MODEL
+
 SAMPLE_LIMIT = 3000
 MAX_TITLE_LENGTH = 80
 
@@ -23,8 +24,9 @@ def generate_title(sample_text: str) -> str | None:
 
     try:
         # Built lazily: the celery worker imports this module while registering
-        # tasks and must stay importable without a usable API key.
-        model = ChatGoogleGenerativeAI(model=TITLE_MODEL, temperature=0.2)
+        # tasks and must stay importable without a usable API key. No temperature
+        # is set because Gemini 3+ rejects custom sampling values.
+        model = ChatGoogleGenerativeAI(model=CHAT_MODEL, thinking_level="low")
 
         content = model.invoke(prompt).content
         title = content if isinstance(content, str) else str(content)

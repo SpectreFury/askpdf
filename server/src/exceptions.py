@@ -52,3 +52,7 @@ class NoDocumentURLException(AppExceptions):
 class SessionNotFoundException(AppExceptions):
     def __init__(self, message: str = "Session not found"):
         super().__init__(message=message, status_code=404)
+
+class DocumentNotReadyException(AppExceptions):
+    def __init__(self, message: str = "This document is still being processed. Try again in a moment."):
+        super().__init__(message=message, status_code=409)

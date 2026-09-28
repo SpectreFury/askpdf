@@ -19,5 +19,6 @@ export const urls = {
   // CHAT
   ASK_QUESTION: (sessionId: string) => `${SERVER_URL}/session/${sessionId}/ask`,
   SUGGESTED_QUESTIONS: (sessionId: string) =>
-    `${SERVER_URL}/session/${sessionId}/suggestions`
+    `${SERVER_URL}/session/${sessionId}/suggestions`,
+  MESSAGES: (sessionId: string) => `${SERVER_URL}/session/${sessionId}/messages`
 };

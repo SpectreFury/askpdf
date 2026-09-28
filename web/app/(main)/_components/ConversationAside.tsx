@@ -1,12 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessagesSquare, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { askQuestion, fetchSuggestedQuestions } from "../_api/chat";
+import {
+  askQuestion,
+  deleteMessages,
+  fetchMessages,
+  fetchSuggestedQuestions,
+} from "../_api/chat";
 import { fetchSession } from "../_api/workspace";
-import type { ChatMessage } from "@/types/chat";
+import type { APIResponseOf } from "@/types/api";
+import type { ChatMessage, MessageResponse } from "@/types/chat";
 import ChatComposer from "./ChatComposer";
 import ChatMessageItem from "./ChatMessageItem";
 import SuggestedQuestions from "./SuggestedQuestions";
@@ -20,6 +26,20 @@ type AskVariables = {
   citationsOnly: boolean;
 };
 
+const EMPTY_MESSAGES: APIResponseOf<MessageResponse[]> = {
+  success: true,
+  data: [],
+  error: "",
+};
+
+const toChatMessage = (message: MessageResponse): ChatMessage => ({
+  id: message.id,
+  role: message.role,
+  content: message.content,
+  created_at: message.created_at,
+  citations: message.citations,
+});
+
 const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
@@ -27,10 +47,18 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
   const [sendError, setSendError] = useState<string | null>(null);
 
   const threadRef = useRef<HTMLDivElement>(null);
+  const hydratedSession = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: session } = useQuery({
     queryKey: ["session", sessionId],
     queryFn: () => fetchSession(sessionId),
+    enabled: Boolean(sessionId),
+  });
+
+  const { data: history } = useQuery({
+    queryKey: ["messages", sessionId],
+    queryFn: () => fetchMessages(sessionId),
     enabled: Boolean(sessionId),
   });
 
@@ -39,6 +67,15 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
     queryFn: () => fetchSuggestedQuestions(sessionId),
     enabled: Boolean(sessionId),
   });
+
+  // History is stored server side, so the thread comes back after a reload or a
+  // navigation instead of starting empty.
+  useEffect(() => {
+    if (!history?.data || hydratedSession.current === sessionId) return;
+
+    hydratedSession.current = sessionId;
+    setMessages(history.data.map(toChatMessage));
+  }, [history, sessionId]);
 
   useEffect(() => {
     const thread = threadRef.current;
@@ -91,22 +128,39 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
       );
     },
 
-    onError: (_error, _variables, context) => {
-      if (!context) return;
+    onError: (error, _variables, context) => {
+      if (context) {
+        setMessages((current) =>
+          current
+            .filter((message) => message.id !== context.pendingId)
+            .map((message) =>
+              message.id === context.userId
+                ? { ...message, status: "error" }
+                : message
+            )
+        );
 
-      setMessages((current) =>
-        current
-          .filter((message) => message.id !== context.pendingId)
-          .map((message) =>
-            message.id === context.userId
-              ? { ...message, status: "error" }
-              : message
-          )
+        setQuestion(context.question);
+      }
+
+      setSendError(
+        error instanceof Error
+          ? error.message
+          : "We couldn't send your question. Please try again."
       );
-
-      setQuestion(context.question);
-      setSendError("We couldn't send your question. Please try again.");
     },
+  });
+
+  const clearMutation = useMutation({
+    mutationFn: () => deleteMessages(sessionId),
+    onSuccess: () => {
+      queryClient.setQueryData(["messages", sessionId], EMPTY_MESSAGES);
+
+      setMessages([]);
+      setQuestion("");
+      setSendError(null);
+    },
+    onError: () => setSendError("We couldn't clear this conversation."),
   });
 
   const submitQuestion = (nextQuestion: string) => {
@@ -115,12 +169,6 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
     if (!trimmed) return;
 
     askMutation.mutate({ question: trimmed, citationsOnly });
-  };
-
-  const handleReset = () => {
-    setMessages([]);
-    setQuestion("");
-    setSendError(null);
   };
 
   return (
@@ -132,8 +180,8 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
         <Button
           variant="outline"
           size="sm"
-          onClick={handleReset}
-          disabled={messages.length === 0}
+          onClick={() => clearMutation.mutate()}
+          disabled={messages.length === 0 || clearMutation.isPending}
           className="ml-auto cursor-pointer"
         >
           <RotateCcw />
@@ -141,7 +189,10 @@ const ConversationAside = ({ sessionId }: ConversationAsideProps) => {
         </Button>
       </div>
 
-      <div ref={threadRef} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+      <div
+        ref={threadRef}
+        className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto"
+      >
         {messages.length === 0 && (
           <p className="text-xs text-secondary">No questions yet.</p>
         )}

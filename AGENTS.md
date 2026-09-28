@@ -29,7 +29,7 @@ Baseline: `npm run lint` currently fails with 12 errors / 13 warnings already co
 
 ## Env
 
-- `server/.env` (gitignored) requires: `DATABASE_URL` (asyncpg form `postgresql+asyncpg://...`), `JWT_SECRET`, `REDIS_URL`, `CLOUDINARY_URL`, `GOOGLE_API_KEY` (Gemini embeddings, worker side), and `ENV=production` to flip the refresh cookie to `secure`.
+- `server/.env` (gitignored) requires: `DATABASE_URL` (asyncpg form `postgresql+asyncpg://...`), `JWT_SECRET`, `REDIS_URL`, `CLOUDINARY_URL`, `GOOGLE_API_KEY` (Gemini, **not** `GEMINI_API_KEY` — the SDK ignores that name), and `ENV=production` to flip the refresh cookie to `secure`.
 - `REDIS_URL` is needed at **import** time: `src/routers/session.py` imports `celery_app`, which raises without it — the API won't boot.
 - `web/.env.local` needs `NEXT_PUBLIC_SERVER_URL`. Every endpoint URL is declared in `web/utils/env.ts`; add new ones there.
 - `.env` files are gitignored but contain live Neon/Upstash/Cloudinary credentials — never commit or print them. `server/uv.lock` is gitignored too, so it isn't a shared source of truth.
@@ -56,18 +56,20 @@ Uploaded assets are **authenticated** in this Cloudinary account — a plain `cl
 
 The worker also owns two session columns, so they are `null`/"Processing" until a task finishes: `title` is replaced with an AI title from `src/rag_pipeline/title.py` (falls back to the uploaded filename stem, which `POST /session` sets from `CreateSessionData.filename`), and `page_count` comes from the parsed PDF. The write happens in `src/services/session_service.py`, which opens its own `NullPool` engine because the sync Celery task cannot share the API's event loop.
 
-## Chat (UI done, backend not)
+## Ask (RAG chat)
 
-`ConversationAside` is fully wired to two endpoints that **do not exist yet** (expect 404 in the network tab):
+`POST /session/{session_id}/ask` runs retrieval + generation entirely in the API process, so it does **not** need the Celery worker — only a finished ingestion. Ownership is checked by `require_owned_session()` (`server/src/routers/session.py`), which 404s on someone else's session.
 
-- `POST /session/{session_id}/ask` — body `{question: str, citations_only: bool}` → `APIResponse[{answer: str, citations: [{page: int, paragraph: int | null}]}]`
-- `GET /session/{session_id}/suggestions` → `APIResponse[str]`
-
-Threads are client-only state (`useState` in `ConversationAside`) with an optimistic user message plus a pending assistant bubble; nothing is persisted, and Reset just clears local state. Types are in `web/types/chat.ts`, requests in `web/app/(main)/_api/chat.ts`, both behind `fetchWithInterceptor`. When the backend lands, add the routes + pydantic schemas in `server/src/routers/session.py` and nothing on the web side needs to change.
+- `src/rag_pipeline/store.py` owns the Chroma collection naming (`session_{id}`), the persist dir, and the shared Gemini embedding singleton. `rag.py` (ingest) and `retrieval.py` (query) both go through it so they cannot drift on the vector space. **Never pass `embedding_function=None`** — Chroma silently falls back to a 384-dim default and every query dies with `Collection expecting embedding with dimension of 3072, got 384`.
+- `retrieval.py` opens with `create_collection_if_not_exists=False`, so an un-ingested session raises `chromadb.errors.NotFoundError` → `DocumentNotReadyException` (409). The web surfaces that message. Do not flip that flag to `True`, or every unknown id silently creates an empty collection.
+- Chunks carry `page` (0-indexed) and `page_label` (1-indexed); citations emit `page_label` with `paragraph: null` because nothing in the pipeline records paragraph numbers.
+- `answer.py` prompts Gemini to cite blocks as `[n]`; `parse_citations` maps those markers to pages. It also carries the previous question into the retrieval query so follow-ups like "and on GDP?" still retrieve. Chroma and Gemini are blocking, so the route wraps both in `asyncio.to_thread`.
+- History is server side: `messages` table, last 3 exchanges loaded by `ChatService.load_history`. `GET`/`DELETE /session/{id}/messages` hydrate and clear the thread; `ConversationAside` seeds itself from the GET. The write happens only after a successful generation, so a failed turn never persists half an exchange.
+- Suggested questions are generated **once at ingestion** into `sessions.suggested_questions` and served by `GET /session/{id}/suggestions`; the UI hides the section when the list is empty.
 
 ## Database gotcha
 
-- There is exactly one migration and it contains **no `create_table`** — it ALTERs `users`/`sessions`, which no migration creates, and nothing calls `Base.metadata.create_all`. Those tables must already exist in the target DB or the app's startup `alembic upgrade head` fails. Verify against the real DB before assuming a fresh one works.
+- There is exactly one base migration and it contains **no `create_table`** — it ALTERs `users`/`sessions`, which no migration creates, and nothing calls `Base.metadata.create_all`. Those tables must already exist in the target DB or the app's startup `alembic upgrade head` fails. Verify against the real DB before assuming a fresh one works. Revisions after the base one (`bdc5b0f60ba0`, `504eccdb79f5`) are ordinary and do create their own tables.
 - Startup runs `alembic upgrade head` in a thread (`src/main.py` lifespan), so you rarely need to run it manually.
 - Add migrations as new revisions; don't edit `f780b74365ec`, which is already applied.
 - `Session` in `server/src/db/models/auth_models.py` is a **document/workspace** session (title, document_id, user_id) — not an auth session.

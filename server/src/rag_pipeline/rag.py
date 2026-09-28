@@ -2,12 +2,9 @@ import os
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from langchain_chroma.vectorstores import Chroma
-from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 import requests
 from ..utils.cloudinary import secure_download_url
-
-embeddings = GoogleGenerativeAIEmbeddings(model = "gemini-embedding-2")
+from .store import collection_name, open_collection
 
 def download_file(public_id: str):
 
@@ -64,16 +61,15 @@ def injest_pdf(output_path: str, session_id: str):
 
         chunk.metadata["id"] = new_id
 
-    collection_name = f"session_{session_id}"
-
-    vector_store = Chroma(persist_directory="./chroma_db",
-                          embedding_function=embeddings,
-                          collection_name=collection_name)
+    vector_store = open_collection(session_id)
 
     chunk_ids = [chunk.metadata["id"] for chunk in chunks]
 
     vector_store.add_documents(chunks, ids=chunk_ids)
-    print(f"Successfully ingested {len(chunks)} chunks into isolated collection: {collection_name}")
+    print(
+        f"Successfully ingested {len(chunks)} chunks into isolated collection: "
+        f"{collection_name(session_id)}"
+    )
 
     return len(pdf_list), "\n".join(page.page_content for page in pdf_list)
 

@@ -13,6 +13,14 @@ export type ChatMessage = {
   status?: "pending" | "error";
 };
 
+export type MessageResponse = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  citations: Citation[];
+  created_at: string;
+};
+
 export type AskQuestionData = {
   answer: string;
   citations: Citation[];

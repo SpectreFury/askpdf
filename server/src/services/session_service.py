@@ -10,7 +10,10 @@ from src.db.models.auth_models import Session
 
 
 def update_document_info(
-    session_id: str, page_count: int, title: str | None = None
+    session_id: str,
+    page_count: int,
+    title: str | None = None,
+    suggested_questions: list[str] | None = None,
 ) -> None:
     """Persist the facts only the ingestion worker knows.
 
@@ -20,16 +23,24 @@ def update_document_info(
     Celery tasks are sync and `asyncio.run` closes its loop, so this deliberately
     builds its own throwaway engine instead of reusing the API's pooled one.
     """
-    asyncio.run(_update_document_info(session_id, page_count, title))
+    asyncio.run(
+        _update_document_info(session_id, page_count, title, suggested_questions)
+    )
 
 
 async def _update_document_info(
-    session_id: str, page_count: int, title: str | None
+    session_id: str,
+    page_count: int,
+    title: str | None,
+    suggested_questions: list[str] | None,
 ) -> None:
     values: dict[str, object] = {"page_count": page_count}
 
     if title:
         values["title"] = title
+
+    if suggested_questions:
+        values["suggested_questions"] = suggested_questions
 
     engine = create_async_engine(DATABASE_URL, poolclass=NullPool)
 
