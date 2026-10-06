@@ -5,18 +5,11 @@ from .store import MAX_BLOCKS, SCORE_CUTOFF, TOP_K, open_collection
 
 @dataclass
 class ContextBlock:
-    """A retrieved chunk handed to the model as context."""
-
     text: str
     page: int
 
 
 def retrieve_blocks(session_id: str, query: str) -> list[ContextBlock]:
-    """Retrieve the chunks that could answer `query`.
-
-    Raises `chromadb.errors.NotFoundError` when the session has no collection,
-    which means ingestion has not finished yet.
-    """
     vector_store = open_collection(session_id, create_if_missing=False)
 
     results = vector_store.similarity_search_with_score(query, k=TOP_K)
@@ -46,7 +39,6 @@ def retrieve_blocks(session_id: str, query: str) -> list[ContextBlock]:
 
 
 def page_number(metadata: dict) -> int:
-    """Chunks store a 0 indexed `page` plus a 1 indexed `page_label`."""
     label = metadata.get("page_label")
 
     if label is not None:
