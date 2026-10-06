@@ -17,8 +17,7 @@ from .routers import upload
 ROOT_DIR = Path(__file__).resolve().parent.parent
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # alembic's async env calls asyncio.run(), so it needs its own loop
+async def lifespan(_: FastAPI):
     await asyncio.to_thread(
         command.upgrade, Config(str(ROOT_DIR / "alembic.ini")), "head"
     )

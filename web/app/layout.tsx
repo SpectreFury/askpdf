@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Spectral } from "next/font/google";
 import "./globals.css";
 import TanstackProvider from "@/components/providers/tanstack-provider";
+import {Toaster} from "@/components/ui/sonner"
 
 const interSans = Inter({
   variable: "--font-inter",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <TanstackProvider>{children}</TanstackProvider>
+        <Toaster/>
       </body>
     </html>
   );
